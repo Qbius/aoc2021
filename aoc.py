@@ -1,18 +1,41 @@
 from sys import argv
 from typing import get_type_hints
 from common import regex, RegexBase, raw_input
+from os.path import exists
+import webbrowser
+import requests
 
 if len(argv) != 2:
     print('only specify the day please')
     exit()
 
-name = argv[1]
+day = argv[1]
+file_path = f'{day}.py'
+inpt_path = f'inputs/k{day}.txt'
+
+if not exists(inpt_path):
+    session = open('session.id').read().strip()
+    inpt = requests.get(f'https://adventofcode.com/2021/day/{day}/input', cookies={'session': session}, headers={'User-Agent': 'Mozilla/5.0'}).text.strip()
+    with open(inpt_path, 'w') as o_file:
+        o_file.write(inpt)
+
+if not exists(file_path):
+    template = '''def first(values):
+    pass
+
+def second(values):
+    pass
+'''
+    webbrowser.open(f'https://adventofcode.com/2021/day/{day}')
+    with open(file_path, 'w') as o_file:
+        o_file.write(template)
+
+
+day_module = __import__(day)
+day_input_raw = open(f'inputs/{day}.txt').read()
+day_input = [line.strip() for line in open(f'inputs/{day}.txt').readlines()]
+
 notimpl = lambda _: 'not implemented'
-
-day_module = __import__(name)
-day_input_raw = open(f'inputs/{name}.txt').read()
-day_input = [line.strip() for line in open(f'inputs/{name}.txt').readlines()]
-
 day_first = getattr(day_module, 'first', notimpl)
 day_second = getattr(day_module, 'second', notimpl)
 

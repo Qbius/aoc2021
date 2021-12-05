@@ -11,7 +11,7 @@ if len(argv) != 2:
 
 day = argv[1]
 file_path = f'{day}.py'
-inpt_path = f'inputs/k{day}.txt'
+inpt_path = f'inputs/{day}.txt'
 
 if not exists(inpt_path):
     session = open('session.id').read().strip()
@@ -20,7 +20,8 @@ if not exists(inpt_path):
         o_file.write(inpt)
 
 if not exists(file_path):
-    template = '''def first(values):
+    template = '''
+def first(values):
     pass
 
 def second(values):

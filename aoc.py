@@ -33,7 +33,7 @@ def second(values):
 
 
 day_module = __import__(day)
-day_input_raw = open(f'inputs/{day}.txt').read()
+day_input_raw = open(f'inputs/{day}.txt').read().strip()
 day_input = [line.strip() for line in open(f'inputs/{day}.txt').readlines()]
 
 notimpl = lambda _: 'not implemented'

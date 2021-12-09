@@ -1,8 +1,10 @@
-from common import regex
 from itertools import chain
 
-def first(values: regex(r'([a-z ]+) \| ([a-z ]+)', (str, str))):
-    return len(list(chain(*[[digit for digit in code.split(' ') if len(digit) in [2, 3, 4, 7]] for _casts, code in values])))
+def parse(raw_input):
+    return [[[''.join(sorted(e)) for e in fragment.split(' ')] for fragment in line.split(' | ')] for line in raw_input.split('\n')]
+
+def first(values):
+    return len(list(chain(*[[digit for digit in code if len(digit) in [2, 3, 4, 7]] for _casts, code in values])))
 
 def includes_whole(source, form):
     found = next(cast for cast in source if (set(cast) | set(form)) == set(cast))
@@ -26,10 +28,12 @@ def decode(casts):
     two = next(cast for cast in all25 if cast != five)
     
     decoded = [zero, one, two, three, four, five, six, seven, eight, nine] 
-    return {''.join(sorted(cast)): index for index, cast in enumerate(decoded)}
+    return {cast: index for index, cast in enumerate(decoded)}
 
 def get_val(mapped, digits):
-    return int(''.join(str(mapped[''.join(sorted(digit))]) for digit in digits))
+    return int(''.join(str(mapped[digit]) for digit in digits))
 
-def second(values: regex(r'([a-z ]+) \| ([a-z ]+)', (str, str))):
-    return sum(get_val(decode(casts.split(' ')), code.split(' ')) for casts, code in values)
+def second(values):
+    return sum(get_val(decode(casts), code) for casts, code in values)
+
+example = 'acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf'

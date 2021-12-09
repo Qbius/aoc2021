@@ -14,3 +14,12 @@ def second(values: regex(r'([a-z]+) (\d+)', (str, int))):
         elif typ in ['up', 'down']:
             aim += val * (1 if typ == 'down' else -1)
     return horizontal * depth
+
+example = '''
+forward 5
+down 5
+forward 8
+up 3
+down 8
+forward 2
+'''

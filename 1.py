@@ -3,3 +3,16 @@ def first(values: int):
 
 def second(values: int):
     return len([None for a, b, c, d in zip(values[:-3], values[1:-2], values[2:-1], values[3:]) if ((b + c + d) - (a + b + c)) > 0])
+
+example = '''
+199
+200
+208
+210
+200
+207
+240
+269
+260
+263
+'''

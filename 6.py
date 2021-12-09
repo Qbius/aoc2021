@@ -1,4 +1,4 @@
-example = [3,4,3,1,2]
+example = '3,4,3,1,2'
 
 def parse(inpt):
     return list(map(int, inpt.split(',')))

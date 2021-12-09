@@ -1,24 +1,25 @@
 from sys import argv
 from typing import get_type_hints
-from common import regex, RegexBase, raw_input
+from common import RegexBase, raw_input
 from os.path import exists
 import webbrowser
 import requests
 
-if len(argv) != 2:
-    print('only specify the day please')
+if len(argv) < 2 or not argv[1].isdigit():
+    print('please specify the day')
     exit()
 
 day = argv[1]
-file_path = f'{day}.py'
-inpt_path = f'inputs/{day}.txt'
+example = any(arg in ['-e', '--example'] for arg in argv)
 
+inpt_path = f'inputs/{day}.txt'
 if not exists(inpt_path):
     session = open('session.id').read().strip()
     inpt = requests.get(f'https://adventofcode.com/2021/day/{day}/input', cookies={'session': session}, headers={'User-Agent': 'Mozilla/5.0'}).text.strip()
     with open(inpt_path, 'w') as o_file:
         o_file.write(inpt)
 
+file_path = f'{day}.py'
 if not exists(file_path):
     template = '''
 def first(values):
@@ -33,26 +34,28 @@ def second(values):
 
 
 day_module = __import__(day)
-day_input_raw = open(f'inputs/{day}.txt').read().strip()
-day_input = [line.strip() for line in open(f'inputs/{day}.txt').readlines()]
 
 notimpl = lambda _: 'not implemented'
 day_first = getattr(day_module, 'first', notimpl)
 day_second = getattr(day_module, 'second', notimpl)
 
-def call_with_appropriate_arg(day_f):
-    global day_input
+def parse_input(day_f, day_input_raw):
+    day_input_lines = day_input_raw.split('\n')
     type_hints = list(get_type_hints(day_f).values())
-    if hasattr(day_module, 'parse'):
-        return day_f(day_module.parse(day_input_raw))
-    elif not type_hints:
-        return day_f(day_input)
+    if not type_hints:
+        return day_input_lines
     elif RegexBase in type_hints[0].__bases__:
-        return day_f(type_hints[0].process(day_input))
+        return type_hints[0].process(day_input_lines)
     elif type_hints[0] == raw_input:
-        return day_f(day_input_raw)
+        return day_input_raw
     else:
-        return day_f(list(map(type_hints[0], day_input)))
+        return list(map(type_hints[0], day_input_lines))
+
+def call_with_appropriate_arg(day_f):
+    day_input_raw = (day_module.example if example else open(f'inputs/{day}.txt').read()).strip().replace('\r\n', '\n')
+    parsed_input = day_module.parse(day_input_raw) if hasattr(day_module, 'parse') else parse_input(day_f, day_input_raw)
+    return day_f(parsed_input)
+
 
 print('First:', call_with_appropriate_arg(day_first))
 print('Second:', call_with_appropriate_arg(day_second))

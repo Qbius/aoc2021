@@ -43,7 +43,9 @@ day_second = getattr(day_module, 'second', notimpl)
 def call_with_appropriate_arg(day_f):
     global day_input
     type_hints = list(get_type_hints(day_f).values())
-    if not type_hints:
+    if hasattr(day_module, 'parse'):
+        return day_f(day_module.parse(day_input_raw))
+    elif not type_hints:
         return day_f(day_input)
     elif RegexBase in type_hints[0].__bases__:
         return day_f(type_hints[0].process(day_input))

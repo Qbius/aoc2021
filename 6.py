@@ -1,20 +1,21 @@
-from common import raw_input
+example = [3,4,3,1,2]
 
-def total_children(days, cooldown):
-    spawned = list(range(cooldown, days, 7))
-    return (len(spawned) + sum(total_children(days, spawn + 9) for spawn in spawned)) if len(spawned) > 0 else 0
+def parse(inpt):
+    return list(map(int, inpt.split(',')))
 
-def total_lanternfish(days, initial):
-    return sum(total_children(days, cd) for cd in initial) + len(initial)
+precalced = {}
+def total_children(days):
+    if days not in precalced:
+        spawned = list(range(1, days, 7))
+        precalced[days] = len(spawned) + sum(total_children(days - spawn - 8) for spawn in spawned)
+    return precalced[days]
 
+def total_by_timers(timers, days):
+    return len(timers) + sum(total_children(days - timer + 1) for timer in timers)
 
-def first(values: raw_input):
-    timers = list(map(int, values.split(',')))
-    return total_lanternfish(80, timers)
+def first(timers):
+    return total_by_timers(timers, 80)
 
-def second(values: raw_input):
-    timers = list(map(int, values.split(',')))
-    for i in range(256):
-        print(f'{i:0>2}: {total_children(i, 0)}')
-    #return total_lanternfish(256, timers)
+def second(timers):
+    return total_by_timers(timers, 256)
 

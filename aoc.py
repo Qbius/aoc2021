@@ -60,4 +60,5 @@ day_extra = getattr(day_module, 'extra', notimpl)
 
 print('First:', call_with_appropriate_arg(day_first))
 print('Second:', call_with_appropriate_arg(day_second))
-call_with_appropriate_arg(day_extra)
+if not example:
+    call_with_appropriate_arg(day_extra)

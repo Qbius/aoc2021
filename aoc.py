@@ -35,10 +35,6 @@ def second(values):
 
 day_module = __import__(day)
 
-notimpl = lambda _: 'not implemented'
-day_first = getattr(day_module, 'first', notimpl)
-day_second = getattr(day_module, 'second', notimpl)
-
 def parse_input(day_f, day_input_raw):
     day_input_lines = day_input_raw.split('\n')
     type_hints = list(get_type_hints(day_f).values())
@@ -57,5 +53,11 @@ def call_with_appropriate_arg(day_f):
     return day_f(parsed_input)
 
 
+notimpl = lambda _: 'not implemented'
+day_first = getattr(day_module, 'first', notimpl)
+day_second = getattr(day_module, 'second', notimpl)
+day_extra = getattr(day_module, 'extra', notimpl)
+
 print('First:', call_with_appropriate_arg(day_first))
 print('Second:', call_with_appropriate_arg(day_second))
+call_with_appropriate_arg(day_extra)

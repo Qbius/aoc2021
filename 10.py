@@ -5,13 +5,6 @@ opening = ['(', '[', '{', '<']
 closing = [')', ']', '}', '>']
 illegal_chunks = [f'{a}{b}' for ia, a in enumerate(opening) for ib, b in enumerate(closing) if ia != ib]
 
-points = {
-    ')': 3,
-    ']': 57,
-    '}': 1197,
-    '>': 25137,
-}
-
 def find_illegal(line):
     ics = sorted((line.index(ic), ic) for ic in illegal_chunks if ic in line)
     if ics:
@@ -22,7 +15,8 @@ def find_illegal(line):
         return '' if line == line_replaced else find_illegal(line_replaced)
 
 def first(lines):
-    return sum(points[res] for line in lines if (res := find_illegal(line)) != '')
+    getpoints = lambda c: 3 ** max(closing.index(c), 1) * 7 ** max(closing.index(c) - 1, 0) * 19 ** (closing.index(c) > 0)
+    return sum(getpoints(res) for line in lines if (res := find_illegal(line)) != '')
 
 def pure_form(line):
     line_replaced = line.replace('()', '').replace('[]', '').replace('{}', '').replace('<>', '')

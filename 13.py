@@ -21,7 +21,7 @@ def second(info):
     dots, fold_instructions = info
     folded_dots = fold(dots, fold_instructions)
     max_x, max_y = max(x for x, y in folded_dots) + 1, max(y for x, y in folded_dots) + 1
-    return '\n' + '\n'.join(''.join('#' if (x, y) in folded_dots else ' ' for x in range(max_x)) for y in range(max_y))
+    return '\n' + '\n'.join(''.join('█' if (x, y) in folded_dots else ' ' for x in range(max_x)) for y in range(max_y))
 
 example = '''
 6,10

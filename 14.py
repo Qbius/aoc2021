@@ -14,8 +14,8 @@ def steps(string, rules, nsteps):
         inter = rules[a + b]
         return (frequencies(a, inter, steps - 1) + frequencies(inter, b, steps - 1) + counter({inter: 1})) if steps > 0 else counter()
 
-    merged = counter(string) + sum(starmap(frequencies, pairwise(string)), counter())
-    return max(merged.values()) - min(merged.values())
+    total_frequencies = counter(string) + sum(starmap(frequencies, pairwise(string)), counter())
+    return max(total_frequencies.values()) - min(total_frequencies.values())
 
 def first(string, rules):
     return steps(string, rules, 10)

@@ -12,13 +12,11 @@ def fold(dots, fold_instructions):
                 dots[i][relevant_index] = line - (dot[relevant_index] - line)
     return set(map(tuple, dots))
 
-def first(info):
-    dots, fold_instructions = info
+def first(dots, fold_instructions):
     fold_instructions = fold_instructions[:1]
     return len(fold(dots, fold_instructions))
 
-def second(info):
-    dots, fold_instructions = info
+def second(dots, fold_instructions):
     folded_dots = fold(dots, fold_instructions)
     max_x, max_y = max(x for x, y in folded_dots) + 1, max(y for x, y in folded_dots) + 1
     return '\n' + '\n'.join(''.join('█' if (x, y) in folded_dots else ' ' for x in range(max_x)) for y in range(max_y))

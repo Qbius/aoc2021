@@ -50,10 +50,10 @@ def parse_input(day_f, day_input_raw):
 def call_with_appropriate_arg(day_f):
     day_input_raw = (day_module.example if example else open(f'inputs/{day}.txt').read()).strip().replace('\r\n', '\n')
     parsed_input = day_module.parse(day_input_raw) if hasattr(day_module, 'parse') else parse_input(day_f, day_input_raw)
-    return day_f(parsed_input)
+    return day_f(*parsed_input) if isinstance(parsed_input, tuple) else day_f(parsed_input)
 
 
-notimpl = lambda _: 'not implemented'
+notimpl = lambda *_: 'not implemented'
 day_first = getattr(day_module, 'first', notimpl)
 day_second = getattr(day_module, 'second', notimpl)
 day_extra = getattr(day_module, 'extra', notimpl)

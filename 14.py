@@ -1,4 +1,5 @@
-from itertools import chain
+from itertools import pairwise, starmap
+from functools import cache
 from collections import Counter as counter
 
 def parse(raw_input):
@@ -6,27 +7,21 @@ def parse(raw_input):
     rules = dict(tuple(rules_line.split(' -> ')) for rules_line in rules_str.split('\n'))
     return string, rules
 
-class freq_calc(object):
-    def __init__(self, string, rules):
-        self.string = string
-        self.rules = rules
+def steps(string, rules, nsteps):
 
-    def steps(self, nsteps):
-        self.precalced = {}
-        merged = counter(self.string) + sum((self.frequencies(a, b, nsteps) for a, b in zip(self.string[:-1], self.string[1:])), counter())
-        return max(merged.values()) - min(merged.values())
+    @cache
+    def frequencies(a, b, steps=nsteps):
+        inter = rules[a + b]
+        return (frequencies(a, inter, steps - 1) + frequencies(inter, b, steps - 1) + counter({inter: 1})) if steps > 0 else counter()
 
-    def frequencies(self, a, b, steps):
-        if (a, b, steps) not in self.precalced:
-            inter = self.rules[a + b]
-            self.precalced[a, b, steps] = (self.frequencies(a, inter, steps - 1) + self.frequencies(inter, b, steps - 1) + counter({inter: 1})) if steps > 0 else counter()
-        return self.precalced[a, b, steps]
+    merged = counter(string) + sum(starmap(frequencies, pairwise(string)), counter())
+    return max(merged.values()) - min(merged.values())
 
-def first(info):
-    return freq_calc(*info).steps(10)
+def first(string, rules):
+    return steps(string, rules, 10)
 
-def second(info):
-    return freq_calc(*info).steps(40)
+def second(string, rules):
+    return steps(string, rules, 40)
 
 example = '''
 NNCB

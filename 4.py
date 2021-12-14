@@ -25,13 +25,11 @@ def find_last_winning(drawns, boards):
     losing = [(board, selected) for board, selected in boards if not is_winning(selected)]
     return (drawn, boards[0]) if len(losing) == 0 else find_last_winning(rest_drawns, losing)
 
-def first(inpt):
-    drawns, boards = inpt
+def first(drawns, boards):
     last, (board, selected) = find_winning(drawns, boards)
     return last * sum(e for i, e in enumerate(board) if i not in selected)
 
-def second(inpt):
-    drawns, boards = inpt
+def second(drawns, boards):
     last, (board, selected) = find_last_winning(drawns, boards)
     return last * sum(e for i, e in enumerate(board) if i not in selected)
 

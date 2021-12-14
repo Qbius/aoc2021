@@ -1,37 +1,37 @@
 from itertools import chain
 
 def parse(raw_input):
-    start, rules_str = [part.strip() for part in raw_input.split('\n\n')]
+    string, rules_str = [part.strip() for part in raw_input.split('\n\n')]
     rules = dict(tuple(rules_line.split(' -> ')) for rules_line in rules_str.split('\n'))
-    return start, rules
+    return string, rules
 
 def merge(*dicts):
+    dicts = [dic for dic in dicts if dic]
     return {key: sum(dic.get(key, 0) for dic in dicts) for key in set(chain(*[dic.keys() for dic in dicts]))}
 
-precalced = {}
-def total_score(a, b, rules, stepsleft):
-    if stepsleft == 0:
-        return {}
-    if (a, b, stepsleft) not in precalced:
-        inter = rules[a + b]
-        prev1 = total_score(a, inter, rules, stepsleft - 1)
-        prev2 = total_score(inter, b, rules, stepsleft - 1)
-        this = {inter: 1}
-        precalced[a, b, stepsleft] = merge(prev1, prev2, this)
-    return precalced[a, b, stepsleft]
+class freq_calc(object):
+    def __init__(self, string, rules):
+        self.string = string
+        self.rules = rules
 
-def start_scoring(string, rules, steps):
-    initial = {c: string.count(c) for c in set(string)}
-    merged = merge(initial, *[total_score(a, b, rules, steps) for a, b in zip(string[:-1], string[1:])])
-    return max(merged.values()) - min(merged.values())
+    def steps(self, nsteps):
+        self.precalced = {}
+        initial = {c: self.string.count(c) for c in set(self.string)}
+        pair_frequencies = [self.frequencies(a, b, nsteps) for a, b in zip(self.string[:-1], self.string[1:])]
+        merged = merge(initial, *pair_frequencies)
+        return max(merged.values()) - min(merged.values())
+
+    def frequencies(self, a, b, steps):
+        if (a, b, steps) not in self.precalced:
+            inter = self.rules[a + b]
+            self.precalced[a, b, steps] = merge(self.frequencies(a, inter, steps - 1), self.frequencies(inter, b, steps - 1), {inter: 1}) if steps > 0 else {}
+        return self.precalced[a, b, steps]
 
 def first(info):
-    start, rules = info
-    return start_scoring(start, rules, 10)
+    return freq_calc(*info).steps(10)
 
 def second(info):
-    start, rules = info
-    return start_scoring(start, rules, 40)
+    return freq_calc(*info).steps(40)
 
 example = '''
 NNCB

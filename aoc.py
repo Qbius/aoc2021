@@ -1,6 +1,6 @@
 from sys import argv
 from typing import get_type_hints
-from common import RegexBase, raw_input
+from common import RegexBase, SingleLineBase, raw_input
 from os.path import exists
 import webbrowser
 import requests
@@ -42,6 +42,8 @@ def parse_input(day_f, day_input_raw):
         return day_input_lines
     elif RegexBase in type_hints[0].__bases__:
         return type_hints[0].process(day_input_lines)
+    elif SingleLineBase in type_hints[0].__bases__:
+        return type_hints[0].process(day_input_raw)
     elif type_hints[0] == raw_input:
         return day_input_raw
     else:

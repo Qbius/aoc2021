@@ -1,20 +1,15 @@
 from functools import cache
-
-def parse(inpt):
-    return list(map(int, inpt.split(',')))
+from common import single_line
 
 @cache
-def total_children(days):
-    spawned = list(range(1, days, 7))
-    return len(spawned) + sum(total_children(days - spawn - 8) for spawn in spawned)
+def total_children(days, offset, timers=None):
+    timers = timers if timers else tuple(range(1, days, 7))
+    return len(timers) + sum(total_children(days - timer + offset, -8) for timer in timers)
 
-def total_by_timers(timers, days):
-    return len(timers) + sum(total_children(days - timer + 1) for timer in timers)
+def first(timers: single_line(',', int)):
+    return total_children(80, 1, tuple(timers))
 
-def first(timers):
-    return total_by_timers(timers, 80)
-
-def second(timers):
-    return total_by_timers(timers, 256)
+def second(timers: single_line(',', int)):
+    return total_children(256, 1, tuple(timers))
     
 example = '3,4,3,1,2'

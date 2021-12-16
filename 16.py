@@ -2,27 +2,7 @@ from math import prod
 import operator
 
 def parse(raw_input):
-    mapped = {
-        '0': '0000',
-        '1': '0001',
-        '2': '0010',
-        '3': '0011',
-        '4': '0100',
-        '5': '0101',
-        '6': '0110',
-        '7': '0111',
-        '8': '1000',
-        '9': '1001',
-        'A': '1010',
-        'B': '1011',
-        'C': '1100',
-        'D': '1101',
-        'E': '1110',
-        'F': '1111',
-    }
-    for frm, to in mapped.items():
-        raw_input = raw_input.replace(frm, to)
-    return raw_input
+    return ''.join(map(lambda c: f'{bin(int(c, 16))[2:]:0>4}', raw_input))
 
 def parse_packet(feed):
     version, typeid = int(feed[:3], 2), int(feed[3:6], 2)
@@ -65,14 +45,9 @@ def first(transmission):
     return add_versions(tree)
 
 def evaluate(tree):
-    if 'value' in tree:
-        return tree['value']
-    else:
-        repack = lambda f: lambda *subs: f(subs)
-        functions = [repack(sum), repack(prod), repack(min), repack(max), None, operator.gt, operator.lt, operator.eq]
-        f = functions[tree['typeid']]
-        evaluated = list(map(evaluate, tree['subpackets']))
-        return int(f(*evaluated))
+    unpacked = lambda f: lambda subs: f(*subs)
+    functions = [sum, prod, min, max, None, unpacked(operator.gt), unpacked(operator.lt), unpacked(operator.eq)]
+    return tree['value'] if 'value' in tree else int(functions[tree['typeid']](list(map(evaluate, tree['subpackets']))))
 
 def second(transmission):
     tree, _ = parse_packet(transmission)

@@ -1,48 +1,58 @@
 from math import prod
+from inspect import signature
 import operator
 
 def parse(raw_input):
     return ''.join(map(lambda c: f'{bin(int(c, 16))[2:]:0>4}', raw_input))
 
-def parse_packet(feed):
-    version, typeid = int(feed[:3], 2), int(feed[3:6], 2)
-    if typeid == 4:
-        feed = feed[6:]
-        number = ''
-        while True:
-            number += feed[1:5]
-            first = feed[0]
-            feed = feed[5:]
-            if first == '0':
-                break
-        number = int(number, 2)
-        return {'version': version, 'typeid': typeid, 'value': number}, feed
-    else:
-        length_id = feed[6]
-        feed = feed[7:]
-        subpackets = []
-        if length_id == '0':
-            subpacketbits = int(feed[:15], 2)
-            feed = feed[15:]
-            subpackets_feed = feed[:subpacketbits]
-            feed = feed[subpacketbits:]
-            while subpackets_feed:
-                subpacket, subpackets_feed = parse_packet(subpackets_feed)  
-                subpackets.append(subpacket)
-        else:
-            subpacketcount = int(feed[:11], 2) if feed[:11] != '' else 0
-            feed = feed[11:]
-            for _ in range(subpacketcount):
-                subpacket, feed = parse_packet(feed)
-                subpackets.append(subpacket)
-        return {'version': version, 'typeid': typeid, 'subpackets': subpackets}, feed
+def decimal(string):
+    return int(string, 2) if string else 0
 
-def add_versions(tree):
-    return tree['version'] + sum(map(add_versions, tree.get('subpackets', [])))
+registered = []
+def match_bitstring(f):
+    global registered
+    params = [param for param_name, param in signature(f).parameters.items() if param_name != 'feed']
+    sections = {param.name: {'index': sum([p.annotation for p in params][:i]), 'length': param.annotation, 'match': param.default} for i, param in enumerate(params)}
+    lookup = lambda string, section: decimal(string[section['index']:section['index'] + section['length']])
+    test_f = lambda string: all(section['match'] is any or section['match'] == lookup(string, section) for section in sections.values())
+    parse_f = lambda string: ({name: lookup(string, section) for name, section in sections.items()} | {'feed': string[sum(p.annotation for p in params):]})
+    registered.append((test_f, lambda feed: f(**parse_f(feed))))
+
+def next_packet(feed):
+    global registered
+    parse_f = next(parse_f for test_f, parse_f in registered if test_f(feed))
+    return parse_f(feed)
+
+def exhaust_for_subpackets(feed, subpackets, n=None):
+    packet, feed = next_packet(feed)
+    subpackets.append(packet)
+    return (subpackets, feed) if feed == '' or n == 1 else exhaust_for_subpackets(feed, subpackets, n if n is None else (n - 1))
+
+@match_bitstring
+def _(version:3 = any, typeid:3 = 4, feed = ''):
+    length = (len(feed[0::5].split('0')[0]) + 1) * 5
+    raw_number, feed = feed[:length], feed[length:]
+    return {'version': version, 'typeid': typeid, 'value': decimal(''.join(raw_number[i * 5 + 1:i * 5 + 5] for i in range(length // 5)))}, feed
+
+@match_bitstring
+def _(version:3 = any, typeid:3 = any, lengthid:1 = 0, subpackets_bits:15 = any, feed = ''):
+    subpackets_feed, feed = feed[:subpackets_bits], feed[subpackets_bits:]
+    subpackets, _ = exhaust_for_subpackets(subpackets_feed, [])
+    return {'version': version, 'typeid': typeid, 'subpackets': subpackets}, feed
+
+@match_bitstring
+def _(version:3 = any, typeid:3 = any, lengthid:1 = 1, subpackets_count:11 = any, feed = ''):
+    subpackets, feed = exhaust_for_subpackets(feed, [], subpackets_count)
+    return {'version': version, 'typeid': typeid, 'subpackets': subpackets}, feed
+
+
+
+def sum_versions(tree):
+    return tree['version'] + sum(map(sum_versions, tree.get('subpackets', [])))
 
 def first(transmission):
-    tree, _ = parse_packet(transmission)
-    return add_versions(tree)
+    tree, _ = next_packet(transmission)
+    return sum_versions(tree)
 
 def evaluate(tree):
     unpacked = lambda f: lambda subs: f(*subs)
@@ -50,7 +60,7 @@ def evaluate(tree):
     return tree['value'] if 'value' in tree else int(functions[tree['typeid']](list(map(evaluate, tree['subpackets']))))
 
 def second(transmission):
-    tree, _ = parse_packet(transmission)
+    tree, _ = next_packet(transmission)
     return evaluate(tree)
 
 example = '9C0141080250320F1802104A08'

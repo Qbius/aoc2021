@@ -28,22 +28,26 @@ def exhaust_for_subpackets(feed, subpackets, n=None):
     subpackets.append(packet)
     return (subpackets, feed) if feed == '' or n == 1 else exhaust_for_subpackets(feed, subpackets, n if n is None else (n - 1))
 
+def get_operation(typeid):
+    operations = [sum, prod, min, max, None, lambda l: operator.gt(*l), lambda l: operator.lt(*l), lambda l: operator.eq(*l)]
+    return lambda values: int(operations[typeid](list(values)))
+
 @match_bitstring
 def _(version:3 = any, typeid:3 = 4, feed = ''):
     length = (len(feed[0::5].split('0')[0]) + 1) * 5
     raw_number, feed = feed[:length], feed[length:]
-    return {'version': version, 'typeid': typeid, 'value': decimal(''.join(raw_number[i * 5 + 1:i * 5 + 5] for i in range(length // 5)))}, feed
+    return {'version': version, 'value': decimal(''.join(raw_number[i * 5 + 1:i * 5 + 5] for i in range(length // 5)))}, feed
 
 @match_bitstring
 def _(version:3 = any, typeid:3 = any, lengthid:1 = 0, subpackets_bits:15 = any, feed = ''):
     subpackets_feed, feed = feed[:subpackets_bits], feed[subpackets_bits:]
     subpackets, _ = exhaust_for_subpackets(subpackets_feed, [])
-    return {'version': version, 'typeid': typeid, 'subpackets': subpackets}, feed
+    return {'version': version, 'operation': get_operation(typeid), 'subpackets': subpackets}, feed
 
 @match_bitstring
 def _(version:3 = any, typeid:3 = any, lengthid:1 = 1, subpackets_count:11 = any, feed = ''):
     subpackets, feed = exhaust_for_subpackets(feed, [], subpackets_count)
-    return {'version': version, 'typeid': typeid, 'subpackets': subpackets}, feed
+    return {'version': version, 'operation': get_operation(typeid), 'subpackets': subpackets}, feed
 
 
 
@@ -55,9 +59,7 @@ def first(transmission):
     return sum_versions(tree)
 
 def evaluate(tree):
-    unpacked = lambda f: lambda subs: f(*subs)
-    functions = [sum, prod, min, max, None, unpacked(operator.gt), unpacked(operator.lt), unpacked(operator.eq)]
-    return tree['value'] if 'value' in tree else int(functions[tree['typeid']](list(map(evaluate, tree['subpackets']))))
+    return tree['value'] if 'value' in tree else tree['operation'](map(evaluate, tree['subpackets']))
 
 def second(transmission):
     tree, _ = next_packet(transmission)
